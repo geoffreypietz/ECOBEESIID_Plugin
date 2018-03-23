@@ -1,0 +1,7 @@
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at System.Runtime.Remoting.Messaging.LogicalCallContext.PropagateIncomingHeadersToCallContext(IMessage msg)
+   at System.Runtime.Remoting.Proxies.RealProxy.PrivateInvoke(MessageData& msgData, Int32 type)
+   at HomeSeerAPI.IHSApplication.WriteLog(String mtype, String message)
+   at HSPI_ECOBEESIID.Util.Get_Device_List(List`1 deviceList)
+   at HSPI_ECOBEESIID.Util.Find_Create_Devices(EcobeeConnection ecobee)
+   at HSPI_ECOBEESIID.HSPI.updateStatusValues()

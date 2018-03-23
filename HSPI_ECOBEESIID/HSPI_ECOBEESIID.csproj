@@ -85,6 +85,23 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist "$(TargetDir)$(ProjectName)" mkdir" "$(TargetDir)$(ProjectName)
+
+xcopy "$(TargetDir)\*.dll" "$(TargetDir)$(ProjectName)\" /F /Y
+
+
+rmdir "$(TargetDir)\app.publish\" /Q /S
+rmdir "$(TargetDir)\es-MX\" /Q /S
+del "$(TargetDir)\*.dll"
+del "$(TargetDir)\*.application"
+del "$(TargetDir)\*.pdb"
+del "$(TargetDir)\*vshost*"
+del "$(TargetDir)\*.xml"
+
+del "$(TargetDir)\*manifest"
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

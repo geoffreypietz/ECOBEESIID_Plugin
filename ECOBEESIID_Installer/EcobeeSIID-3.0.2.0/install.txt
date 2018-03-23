@@ -1,0 +1,6 @@
+style.css,.\html\hspi_ecobeesiid\css,0
+userprefs.txt,.\Data\hspi_ecobeesiid,16
+debug.txt,.\Data\hspi_ecobeesiid,16
+HSPI_ECOBEESIID.exe,.,0
+HSPI_ECOBEESIID.exe.config,.,16
+HSPI_ECOBEESIID.zip,[UNZIPOVER],./Bin/

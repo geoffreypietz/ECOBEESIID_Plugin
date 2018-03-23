@@ -1,0 +1,11 @@
+﻿
+
+#optionstable{
+color: #333; /* Lighten up font color */
+font-family: Helvetica, Arial, sans-serif; /* Nicer font */
+width: 800px;
+border-collapse:collapse; border-spacing: 0;
+}
+
+td { border: 1px solid #CCC; height: 30px; text-align: left; background: #FAFAFA; width:50% } 
+td.header { border: 1px solid #CCC; height: 30px; text-align: left; background: #F3F3F3; /* Light grey background */ width:100%; font-weight: bold; /* Make sure they're bold */ font-size:larger; column-span:all;}
