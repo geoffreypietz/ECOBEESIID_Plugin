@@ -22,13 +22,13 @@ namespace HSPI_ECOBEESIID.Models
 
         public EcobeeConnection()
         {
-            string userPrefs = System.IO.File.ReadAllText(@"Data/hspi_ecobeesiid/userprefs.txt");
-            using (Login Login = getLoginInfo(userPrefs))
+            string json = Util.hs.GetINISetting("ECOBEE", "login", "", Util.IFACE_NAME + ".ini");
+            using (Login Login = getLoginInfo(json))
             {              
-                refresh_Token = Login.refresh_token;
-                access_Token = Login.access_token;
-                ecobeePin = Login.ecobeePin;
-                code = Login.code; 
+                refresh_Token = Login?.refresh_token;
+                access_Token = Login?.access_token;
+                ecobeePin = Login?.ecobeePin;
+                code = Login?.code; 
             }
         }
 
@@ -52,7 +52,7 @@ namespace HSPI_ECOBEESIID.Models
             using (var login = new Login(refresh_Token, access_Token, ecobeePin, code))
             {
                 string json = JsonConvert.SerializeObject(login);
-                System.IO.File.WriteAllText(@"Data/hspi_ecobeesiid/userprefs.txt", json); 
+                Util.hs.SaveINISetting("ECOBEE", "login", json, Util.IFACE_NAME + ".ini");
             }
         }
 
@@ -115,7 +115,7 @@ namespace HSPI_ECOBEESIID.Models
             return JsonConvert.DeserializeObject<EcobeeData>(response.Content);
         }
 
-        public void setApiJson(string json)
+        public EcobeeResponse setApiJson(string json)
         {
             var client = new RestClient("https://api.ecobee.com/1/thermostat?format=json"); 
             client.FollowRedirects = false;
@@ -124,7 +124,7 @@ namespace HSPI_ECOBEESIID.Models
             request.AddHeader("content-type", "application/json");
 
             IRestResponse initial_response = client.Execute(request);
-            Console.WriteLine(initial_response.Content);
+            return JsonConvert.DeserializeObject<EcobeeResponse>(initial_response.Content);
         }
 
         public bool Disposed { get; private set; }

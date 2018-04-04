@@ -13,31 +13,34 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HomeSeerAPI">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HomeSeerAPI.dll</HintPath>
+      <HintPath>..\..\..\HomeSeer\HomeSeerAPI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HSCF">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HSCF.dll</HintPath>
+      <HintPath>..\..\..\HomeSeer\HSCF.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -48,7 +51,8 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Scheduler">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\Scheduler.dll</HintPath>
+      <HintPath>..\..\..\HomeSeer\Scheduler.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,6 +72,7 @@
     <Compile Include="Models\EcobeeConnection.cs" />
     <Compile Include="Models\EcobeeData.cs" />
     <Compile Include="Models\EcobeePin.cs" />
+    <Compile Include="Models\EcobeeResponse.cs" />
     <Compile Include="Models\Login.cs" />
     <Compile Include="Models\RemoteSensors.cs" />
     <Compile Include="Models\Thermostat.cs" />
