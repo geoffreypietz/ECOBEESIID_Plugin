@@ -14,6 +14,8 @@ namespace HSPI_ECOBEESIID.Models
         public string name { get; set; }
         [DataMember(Name = "type")]
         public string type { get; set; }
+        [DataMember(Name = "code")]
+        public string code { get; set; }
         [DataMember(Name = "inUse")]
         public bool inUse { get; set; }
         [DataMember(Name = "capability")]

@@ -101,7 +101,7 @@ namespace HSPI_ECOBEESIID
                 }*/
 
                 
-                pluginSB.Append("<link rel = 'stylesheet' href = 'hspi_ecobeesiid/css/style.css' type = 'text/css' /><br>");
+                //pluginSB.Append("<link rel = 'stylesheet' href = 'hspi_ecobeesiid/css/style.css' type = 'text/css' /><br>");
                 page.AddHeader(pluginSB.ToString());
 
 
@@ -128,22 +128,22 @@ namespace HSPI_ECOBEESIID
                 // Options Tab
 
                 pluginSB.Append(PageBuilderAndMenu.clsPageBuilder.FormStart("myform1", "testpage", "post"));
-                pluginSB.Append("<table id='optionstable'>");
+                pluginSB.AppendLine("<table class='full_width_table' cellspacing='0' width='100%' >");
 
                 // Ecobee API Access Token
-                pluginSB.Append("<tr><td class='header' colspan='2'>Reset Ecobee API Access Token</td></tr>");
+                pluginSB.Append("<tr><td class='tableheader' colspan='2'>Reset Ecobee API Access Token</td></tr>");
 
-                pluginSB.Append("<tr><td>Open the link in a new tab and sign in</td>");
-                pluginSB.Append("<td><a href='https://www.ecobee.com/home/ecobeeLogin.jsp'>Ecobee Login</a></td>");
+                pluginSB.Append("<tr><td class='tablecell'>Open the link in a new tab and sign in</td>");
+                pluginSB.Append("<td class='tablecell'><a href='https://www.ecobee.com/home/ecobeeLogin.jsp'>Ecobee Login</a></td>");
                 pluginSB.Append("</td></tr>");
 
-                pluginSB.Append("<tr><td>Hit the Pin-Code Retrieval button to obtain a new pin code</td>");
-                pluginSB.Append("<td>");
+                pluginSB.Append("<tr><td class='tablecell'>Hit the Pin-Code Retrieval button to obtain a new pin code</td>");
+                pluginSB.Append("<td class='tablecell'>");
                 pluginSB = BuildLinkButton(pluginSB, "pin_get", "Pin-Code Retrieval", "");
                 pluginSB.Append("</td></tr>");
 
-                pluginSB.Append("<tr><td>Copy the pin-code, add an application on the MyApps page within the Ecobee portal and manually enter the pin code</td>");
-                pluginSB.Append("<td>");
+                pluginSB.Append("<tr><td class='tablecell'>Copy the pin-code, add an application on the MyApps page within the Ecobee portal and manually enter the pin code</td>");
+                pluginSB.Append("<td class='tablecell'>");
 
                 clsJQuery.jqScrollingRegion sr = new clsJQuery.jqScrollingRegion("pin_region");
                 sr.className = "";
@@ -154,8 +154,8 @@ namespace HSPI_ECOBEESIID
                 //pluginSB = BuildTextBox(pluginSB, "pin_code", "Pin-Code", "Pin-Code", "", 200);
                 pluginSB.Append("</td></tr>");
              
-                pluginSB.Append("<tr><td>After validating the pin code, hit the Reset/Retrieve Access-Token button to reset your access token</td>");
-                pluginSB.Append("<td>");
+                pluginSB.Append("<tr><td class='tablecell'>After validating the pin code, hit the Reset/Retrieve Access-Token button to reset your access token</td>");
+                pluginSB.Append("<td class='tablecell'>");
                 pluginSB = BuildLinkButton(pluginSB, "access_button", "Reset/Retrieve Access-Token", "");
                 pluginSB.Append("</td></tr>");
 

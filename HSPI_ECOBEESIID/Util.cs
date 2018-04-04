@@ -116,26 +116,24 @@ namespace HSPI_ECOBEESIID
                 if (EN == null)
                     throw new Exception(IFACE_NAME + " failed to get a device enumerator from HomeSeer.");
                 int dvRef;
-                string address;
+
                 do
                 {
                     dv = EN.GetNext();
                     if (dv == null)
-                    { continue; }
-                    dvRef = dv.get_Ref(hs);
-                    address = dv.get_Address(hs);
-
-                    if (address.Contains(IFACE_NAME))
-                    {
-                        var ddp = new DeviceDataPoint(dvRef, address, dv);
-                        deviceList.Add(ddp);
-                    }
+                        continue;
+                    if (dv.get_Interface(null) != IFACE_NAME)
+                        continue;
+                    dvRef = dv.get_Ref(null);
+                    
+                    var ddp = new DeviceDataPoint(dvRef, dv);
+                    deviceList.Add(ddp);
 
                 } while (!(EN.Finished));
             }
             catch (Exception ex)
             {
-                hs.WriteLog(IFACE_NAME + " Error", "Exception in Find_Create_Devices/Enumerator: " + ex.Message);
+                Log("Exception in Get_Device_List: " + ex.Message, LogType.LOG_TYPE_ERROR);
             }
 
             return deviceList;
@@ -143,9 +141,9 @@ namespace HSPI_ECOBEESIID
 
         static internal void Update_ThermostatDevice(Thermostat thermostat, DeviceDataPoint ddPoint, EcobeeConnection ecobee)
         {
-            var name = ddPoint.address.Split('-')[3];
+            string name;
+            string id = GetDeviceKeys(ddPoint.device, out name);
 
-            VSVGPairs.VSPair SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
             ThermostatEvent thermEvent = null;
             var eventExists = false;
             if (thermostat.events != null || thermostat.events.Count() != 0)
@@ -164,28 +162,26 @@ namespace HSPI_ECOBEESIID
             {
                 case "Ambient Temperature":
                     {
-                        hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.actualTemperature) / 10), false);
-
-                        SPair = hs.DeviceVSP_Get(ddPoint.dvRef, -500, ePairStatusControl.Status);
-                        SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
+                        hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.actualTemperature) / 10), true);
+                        ddPoint.device.set_ScaleText(hs, thermostat.settings.useCelsius ? "C" : "F");
 
                         break;
                     }
                 case "Humidity":
                     {
-                        hs.SetDeviceValueByRef(ddPoint.dvRef, thermostat.runtime.actualHumidity, false);
+                        hs.SetDeviceValueByRef(ddPoint.dvRef, thermostat.runtime.actualHumidity, true);
                         break;
                     }
                 case "Cool Range":
                     {
                         var range = thermostat.settings.coolRangeLow/10 + " - " + thermostat.settings.coolRangeHigh/10 + " " + getTemperatureUnits(thermostat.settings.useCelsius);
-                        hs.SetDeviceString(ddPoint.dvRef, range, false);
+                        hs.SetDeviceString(ddPoint.dvRef, range, true);
                         break;
                     }
                 case "Heat Range":
                     {
                         var range = thermostat.settings.heatRangeLow/10 + " - " + thermostat.settings.heatRangeHigh/10 + " " + getTemperatureUnits(thermostat.settings.useCelsius);
-                        hs.SetDeviceString(ddPoint.dvRef, range, false);
+                        hs.SetDeviceString(ddPoint.dvRef, range, true);
                         break;
                     }
                 case "HVAC Mode":
@@ -193,23 +189,23 @@ namespace HSPI_ECOBEESIID
                         switch (thermostat.settings.hvac_mode)
                         {
                             case "off":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                                 break;
                             case "auto":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, true);
                                 break;
                             case "cool":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 2, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 2, true);
                                 break;
                             case "heat":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 3, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 3, true);
                                 break;
                         }
                         break;
                     }
                 case "HVAC Status":
                     {
-                        hs.SetDeviceString(ddPoint.dvRef, thermostat.settings.hvac_mode, false);
+                        hs.SetDeviceString(ddPoint.dvRef, thermostat.settings.hvac_mode, true);
                         break;
                     }
 
@@ -219,13 +215,13 @@ namespace HSPI_ECOBEESIID
                         {
                             case null:
                             case "off":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                                 break;
                             case "on":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, true);
                                 break;
                             case "auto":
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 2, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 2, true);
                                 break;
                         }
 
@@ -234,16 +230,14 @@ namespace HSPI_ECOBEESIID
                 case "Fan Status":
                     {
 
-                        hs.SetDeviceString(ddPoint.dvRef, thermostat.runtime.desiredFanMode, false);
+                        hs.SetDeviceString(ddPoint.dvRef, thermostat.runtime.desiredFanMode, true);
 
                         break;
                     }
                 case "Deadband":
                     {
-                        hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble((thermostat.runtime.desiredCool - thermostat.runtime.desiredHeat)) / 10), false);
-
-                        SPair = hs.DeviceVSP_Get(ddPoint.dvRef, -500, ePairStatusControl.Status);
-                        SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
+                        hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble((thermostat.runtime.desiredCool - thermostat.runtime.desiredHeat)) / 10), true);
+                        ddPoint.device.set_ScaleText(hs, thermostat.settings.useCelsius ? "C" : "F");
 
                         break;
                     }
@@ -252,15 +246,13 @@ namespace HSPI_ECOBEESIID
 
                         if (eventExists)
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermEvent.coolHoldTemp) / 10), false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermEvent.coolHoldTemp) / 10), true);
                         }
                         else
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.desiredCool) / 10), false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.desiredCool) / 10), true);
                         }
-
-                        SPair = hs.DeviceVSP_Get(ddPoint.dvRef, -500, ePairStatusControl.Status);
-                        SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
+                        ddPoint.device.set_ScaleText(hs, thermostat.settings.useCelsius ? "C" : "F");
 
                         break;
                     }
@@ -269,15 +261,13 @@ namespace HSPI_ECOBEESIID
 
                         if (eventExists)
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermEvent.heatHoldTemp) / 10), false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermEvent.heatHoldTemp) / 10), true);
                         }
                         else
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.desiredHeat) / 10), false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, Math.Ceiling(Convert.ToDouble(thermostat.runtime.desiredHeat) / 10), true);
                         }
-
-                        SPair = hs.DeviceVSP_Get(ddPoint.dvRef, -500, ePairStatusControl.Status);
-                        SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
+                        ddPoint.device.set_ScaleText(hs, thermostat.settings.useCelsius ? "C" : "F");
 
                         break;
                     }
@@ -289,34 +279,34 @@ namespace HSPI_ECOBEESIID
                             switch (thermEvent.type)
                             {
                                 case "hold":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                                     break;
                                 case "demandResponse":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 1, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 1, true);
                                     break;
                                 case "sensor":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 2, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 2, true);
                                     break;
                                 case "switchOccupancy":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 3, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 3, true);
                                     break;
                                 case "vacation":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 4, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 4, true);
                                     break;
                                 case "quickSave":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 5, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 5, true);
                                     break;
                                 case "today":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 6, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 6, true);
                                     break;
                                 case "template":
-                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 7, false);
+                                    hs.SetDeviceValueByRef(ddPoint.dvRef, 7, true);
                                     break;
                             }
                         }
                         else
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                         }
                         break;
                     }
@@ -326,62 +316,59 @@ namespace HSPI_ECOBEESIID
                         {
                             if (thermostat.events[0].isOccupied)
                             {
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 1, true);
                             }
                             else
                             {
-                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                                hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                             }
 
                         }
                         else
                         {
-                            hs.SetDeviceValueByRef(ddPoint.dvRef, 2, false);
+                            hs.SetDeviceValueByRef(ddPoint.dvRef, 2, true);
                         }
 
                         break;
 
                     }
             }
-            hs.DeviceVSP_AddPair(ddPoint.dvRef, SPair);
         }
 
         static internal void Update_RemoteDevice(Thermostat thermostat, SensorCapabilities capability, DeviceDataPoint ddPoint, EcobeeConnection ecobee)
         {
-            var name = ddPoint.address.Split('-')[3];
-
-            VSVGPairs.VSPair SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
+            string name;
+            string id = GetDeviceKeys(ddPoint.device, out name);
+            
 
             if(name.Equals("Temperature Sensor"))
             {
                 if (capability.value != "unknown")
                 {
                     var temp = Int16.Parse(capability.value) / 10;
-                    hs.SetDeviceValueByRef(ddPoint.dvRef, temp, false); 
+                    hs.SetDeviceValueByRef(ddPoint.dvRef, temp, true); 
                 }
                 else
                 {
-                    hs.SetDeviceString(ddPoint.dvRef, "unknown", false);
+                    hs.SetDeviceString(ddPoint.dvRef, "unknown", true);
                 }
+                ddPoint.device.set_ScaleText(hs, thermostat.settings.useCelsius ? "C" : "F");
 
-                SPair = hs.DeviceVSP_Get(ddPoint.dvRef, -500, ePairStatusControl.Status);
-                SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
             }
-            if(name.Equals("Occupancy Sensor"))
+            if (name.Equals("Occupancy Sensor"))
             {
                 if (capability.value.Equals("true"))
                 {
-                    hs.SetDeviceValueByRef(ddPoint.dvRef, 1, false);
+                    hs.SetDeviceValueByRef(ddPoint.dvRef, 1, true);
                 }
                 else
                 {
-                    hs.SetDeviceValueByRef(ddPoint.dvRef, 0, false);
+                    hs.SetDeviceValueByRef(ddPoint.dvRef, 0, true);
                 }
             }
-            hs.DeviceVSP_AddPair(ddPoint.dvRef, SPair);
         }
 
-            static internal void Find_Create_Devices(EcobeeConnection ecobee)
+        static internal void Find_Create_Devices(EcobeeConnection ecobee)
         {
             List<DeviceDataPoint> deviceList = new List<DeviceDataPoint>();
 
@@ -432,18 +419,20 @@ namespace HSPI_ECOBEESIID
             }
             catch (Exception ex)
             {
-                hs.WriteLog(IFACE_NAME + " Error", "Exception in Find_Create_Thermostats: " + ex.Message);
-                Console.WriteLine(ex.Message);
+                Log("Exception in Find_Create_Thermostats: " + ex.Message, LogType.LOG_TYPE_ERROR);
                 System.IO.File.WriteAllText(@"Data/hspi_ecobeesiid/debug.txt", ex.ToString());
             }
         }
 
         static internal bool Thermostat_Devices(string tString, Thermostat thermostat, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
         {
+            string name;
+            string id;
 
             foreach (var ddPoint in deviceList)
             {
-                if (ddPoint.address.Contains(IFACE_NAME + "-" + thermostat.identifier + "-" + thermostat.name + "-" + tString))
+                id = GetDeviceKeys(ddPoint.device, out name);
+                if (id == thermostat.identifier && name == tString)
                 {
                     Update_ThermostatDevice(thermostat, ddPoint, ecobee);
                     return false;
@@ -453,12 +442,15 @@ namespace HSPI_ECOBEESIID
             DeviceClass dv = new DeviceClass();
             dv = GenericHomeSeerDevice(dv, tString, thermostat.name, thermostat.identifier);
             var dvRef = dv.get_Ref(hs);
-            var name = dv.get_Address(hs).Split('-')[3];
+            id = GetDeviceKeys(dv, out name);
             switch (name)
             {
                 case "Root":
                     {
-                        dv.set_Relationship(hs, Enums.eRelationship.Parent_Root);
+                        DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                        dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                        dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Root;
+                        dv.set_DeviceType_Set(hs, dt); dv.set_Relationship(hs, Enums.eRelationship.Parent_Root);
                         dv.MISC_Set(hs, Enums.dvMISC.STATUS_ONLY);
 
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
@@ -479,6 +471,11 @@ namespace HSPI_ECOBEESIID
                 case "HVAC Mode":
                     {
                         dv.MISC_Set(hs, Enums.dvMISC.SHOW_VALUES);
+                        DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                        dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                        dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Mode_Set;
+                        dt.Device_SubType = 0;
+                        dv.set_DeviceType_Set(hs, dt);
 
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Both);
@@ -488,6 +485,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "Off";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 1;
+                        SPair.ControlUse = ePairControlUse._ThermModeOff;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         VSVGPairs.VGPair GPair = new VSVGPairs.VGPair();
@@ -500,6 +498,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "Auto";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 2;
+                        SPair.ControlUse = ePairControlUse._ThermModeAuto;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -511,6 +510,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "Cool";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 2;
+                        SPair.ControlUse = ePairControlUse._ThermModeCool;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -522,6 +522,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "Heat";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 2;
+                        SPair.ControlUse = ePairControlUse._ThermModeHeat;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -534,6 +535,11 @@ namespace HSPI_ECOBEESIID
                 case "Fan Mode":
                     {
                         dv.MISC_Set(hs, Enums.dvMISC.SHOW_VALUES);
+                        DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                        dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                        dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Fan_Mode_Set;
+                        dt.Device_SubType = 0;
+                        dv.set_DeviceType_Set(hs, dt);
 
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Both);
@@ -555,6 +561,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "On";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 2;
+                        SPair.ControlUse = ePairControlUse._ThermFanOn;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -566,6 +573,7 @@ namespace HSPI_ECOBEESIID
                         SPair.Status = "Auto";
                         SPair.Render_Location.Row = 1;
                         SPair.Render_Location.Column = 2;
+                        SPair.ControlUse = ePairControlUse._ThermFanAuto;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -583,9 +591,10 @@ namespace HSPI_ECOBEESIID
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
                         SPair.PairType = VSVGPairs.VSVGPairType.Range;
-                        SPair.RangeStart = -500;
-                        SPair.RangeEnd = 500;
-                        SPair.RangeStatusSuffix = " " + getTemperatureUnits(thermostat.settings.useCelsius);
+                        SPair.RangeStart = -150;
+                        SPair.RangeEnd = 100;
+                        SPair.RangeStatusSuffix = " °" + VSVGPairs.VSPair.ScaleReplace;
+                        SPair.HasScale = true;
                         hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         if (name.Equals("Target Temperature High") || name.Equals("Target Temperature Low"))
@@ -598,15 +607,41 @@ namespace HSPI_ECOBEESIID
                             SPair.Render_Location.Row = 1;
                             SPair.Render_Location.Column = 1;
                             SPair.Status = "Enter target:";
-                            SPair.RangeStart = -500;
-                            SPair.RangeEnd = 500;
+                            SPair.RangeStart = 0;
+                            SPair.RangeEnd = 100;
+                            if (name.Equals("Target Temperature Low"))
+                            {
+                                SPair.ControlUse = ePairControlUse._HeatSetPoint;
+                                DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                                dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                                dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Setpoint;
+                                dt.Device_SubType = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceSubType_Setpoint.Heating_1;
+                                dv.set_DeviceType_Set(hs, dt);
+                            }
+                            else if (name.Equals("Target Temperature High"))
+                            {
+                                SPair.ControlUse = ePairControlUse._CoolSetPoint;
+
+                                DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                                dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                                dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Setpoint;
+                                dt.Device_SubType = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceSubType_Setpoint.Cooling_1;
+                                dv.set_DeviceType_Set(hs, dt);
+                            }
                             hs.DeviceVSP_AddPair(dvRef, SPair);
+                        }
+                        else if (name.Equals("Ambient Temperature"))
+                        {
+                            DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                            dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                            dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Temperature;
+                            dv.set_DeviceType_Set(hs, dt);
                         }
 
                         VSVGPairs.VGPair GPair = new VSVGPairs.VGPair();
                         GPair.PairType = VSVGPairs.VSVGPairType.Range;
-                        GPair.RangeStart = -500;
-                        GPair.RangeEnd = 502;
+                        GPair.RangeStart = -100;
+                        GPair.RangeEnd = 150;
                         GPair.Graphic = "/images/HomeSeer/contemporary/Thermometer-70.png";
                         hs.DeviceVGP_AddPair(dvRef, GPair);
 
@@ -671,6 +706,12 @@ namespace HSPI_ECOBEESIID
 
                 case "Humidity":
                     {
+                        DeviceTypeInfo_m.DeviceTypeInfo dt = new DeviceTypeInfo_m.DeviceTypeInfo();
+                        dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
+                        dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Temperature;
+                        dt.Device_SubType = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceSubType_Temperature.Humidity;
+                        dv.set_DeviceType_Set(hs, dt);
+
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
                         SPair.PairType = VSVGPairs.VSVGPairType.Range;
@@ -738,9 +779,14 @@ namespace HSPI_ECOBEESIID
                 sensorType = "Occupancy";
             }
 
+            string name;
+            string id;
+
             foreach (var ddPoint in deviceList)
             {
-                if (ddPoint.address.Contains(IFACE_NAME + "-" + thermostat.identifier + "-" + remote.name + "-" + sensorType + tString))
+                id = GetDeviceKeys(ddPoint.device, out name);
+
+                if(id == (thermostat.identifier + remote.code) && name == (sensorType + tString))
                 {
                     Update_RemoteDevice(thermostat, capability, ddPoint, ecobee);
                     return false;
@@ -750,13 +796,13 @@ namespace HSPI_ECOBEESIID
             
 
             DeviceClass dv = new DeviceClass();
-            dv = GenericHomeSeerDevice(dv, sensorType + tString, remote.name, thermostat.identifier);
+            dv = GenericHomeSeerDevice(dv, sensorType + tString, remote.name, thermostat.identifier + remote.code);
             var dvRef = dv.get_Ref(hs);
-            var name = dv.get_Address(hs).Split('-')[3];
+            id = GetDeviceKeys(dv, out name);
 
-            switch(sensorType)
+            switch (name)
             {
-                case "Temperature":
+                case "Temperature Sensor":
                     {
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
@@ -774,7 +820,7 @@ namespace HSPI_ECOBEESIID
                         hs.DeviceVGP_AddPair(dvRef, GPair);
                         break;
                     }
-                case "Occupancy":
+                case "Occupancy Sensor":
                     {
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
@@ -803,10 +849,33 @@ namespace HSPI_ECOBEESIID
             return true;
         }
 
-            static internal DeviceClass GenericHomeSeerDevice(DeviceClass dv, string dvName, string dvName_long, string device_id)
+        static internal string GetDeviceKeys(DeviceClass dev, out string name)
+        {
+            string id = "";
+            name = "";
+            PlugExtraData.clsPlugExtraData pData = dev.get_PlugExtraData_Get(hs);
+            if (pData != null)
+            {
+                id = (string)pData.GetNamed("id");
+                name = (string)pData.GetNamed("name");
+            }
+            return id;
+        }
+
+        static internal void SetDeviceKeys(DeviceClass dev, string id, string name)
+        {
+            PlugExtraData.clsPlugExtraData pData = dev.get_PlugExtraData_Get(hs);
+            if (pData == null)
+                pData = new PlugExtraData.clsPlugExtraData();
+            pData.AddNamed("id", id);
+            pData.AddNamed("name", name);
+            dev.set_PlugExtraData_Set(hs, pData);
+        }
+
+        static internal DeviceClass GenericHomeSeerDevice(DeviceClass dv, string dvName, string dvName_long, string device_id)
         {
             int dvRef;
-            Console.WriteLine("Creating Device: " + dvName_long + " " + dvName);
+            Log("Creating Device: " + dvName_long + " " + dvName, LogType.LOG_TYPE_INFO);
             var DT = new DeviceTypeInfo_m.DeviceTypeInfo();
             DT.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
             if (dvName.Contains("Root"))
@@ -816,8 +885,9 @@ namespace HSPI_ECOBEESIID
             hs.NewDeviceRef(dvName_long + " " + dvName);
             dvRef = hs.GetDeviceRefByName(dvName_long + " " + dvName);
             dv = (DeviceClass)hs.GetDeviceByRef(dvRef);
-            dv.set_Address(hs, IFACE_NAME);
-            dv.set_Code(hs, device_id + "-" + dvName_long + "-" + dvName);
+            dv.set_Address(hs, "");
+            SetDeviceKeys(dv, device_id, dvName);
+            //dv.set_Code(hs, device_id + "-" + dvName_long + "-" + dvName);
             dv.set_Location(hs, "Thermostat");
             dv.set_Location2(hs, "Ecobee");
             dv.set_Interface(hs, IFACE_NAME);
@@ -918,23 +988,26 @@ namespace HSPI_ECOBEESIID
         static internal void SetAssociatedDevices(string family)
         {
             List<DeviceDataPoint> deviceList = new List<DeviceDataPoint>();
+            string name;
+            string id;
+
             deviceList = Get_Device_List(deviceList);
 
             foreach (var ddPoint in deviceList)
             {
-                var addrParts = ddPoint.address.Split('-').ToList().GetRange(1, 2).ToArray();
-                var addrTest = string.Join("-", addrParts);
+                id = GetDeviceKeys(ddPoint.device, out name);
 
-                if (ddPoint.address.Contains("Root"))   // True if the Device Root has been found
+                if (name == "Root")   // True if the Device Root has been found
                 {
                     ddPoint.device.AssociatedDevice_ClearAll(hs);
 
                     foreach (var aDDPoint in deviceList)
                     {
-                        var aAddr = aDDPoint.device.get_Address(hs);
-                        if (aAddr.Contains(addrParts[0]) && !aAddr.Contains("Root"))
+                        string aName;
+                        string aId = GetDeviceKeys(aDDPoint.device, out aName);
+                        if (aId.StartsWith(id) && aName != "Root")
                         {
-                            ddPoint.device.AssociatedDevice_Add(hs, aDDPoint.device.get_Ref(hs));
+                            ddPoint.device.AssociatedDevice_Add(hs, aDDPoint.dvRef);
                         }
                     }
                 }

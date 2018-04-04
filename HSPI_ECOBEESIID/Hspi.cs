@@ -186,14 +186,13 @@ namespace HSPI_ECOBEESIID
                     }
                     else
                     {
-                        Util.hs.WriteLog(Util.IFACE_NAME + " Error", "Invalid Refresh Token-Try resetting the token on the Options Page");
+                        Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
                     } 
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed");
-                Console.WriteLine(ex.ToString());
+                Util.Log(ex.ToString(), Util.LogType.LOG_TYPE_ERROR);
                 System.IO.File.WriteAllText(@"Data/hspi_ecobeesiid/debug.txt", ex.ToString());
             }
             running = false;
@@ -267,7 +266,7 @@ namespace HSPI_ECOBEESIID
                 // register a generic Util.callback for other plugins to raise to use
                 Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, "");
 
-                Util.hs.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
+                Util.Log("InitIO called, plug-in is being initialized...", Util.LogType.LOG_TYPE_INFO);
 
 
 
@@ -398,53 +397,71 @@ namespace HSPI_ECOBEESIID
         {
             foreach (var CC in colSend)
             {
-                Console.WriteLine("SetIOMulti set value: " + CC.ControlValue.ToString() + "->ref:" + CC.Ref.ToString());
-                
-                using (var ecobee = new EcobeeConnection())
+                try
                 {
+                    EcobeeResponse response = null;
+                    Util.Log("SetIOMulti set value: " + CC.ControlValue.ToString() + "->ref:" + CC.Ref.ToString(), Util.LogType.LOG_TYPE_INFO);
 
-
-                    using (var ecobeeData = ecobee.getEcobeeData())
+                    using (var ecobee = new EcobeeConnection())
                     {
-                        
-                        DeviceClass dv = (DeviceClass)Util.hs.GetDeviceByRef(CC.Ref);
 
-                        var id = dv.get_Address(Util.hs).Split('-');
-                        int high = 0;
-                        int low = 0;
-
-                        if (id[3].Equals("Target Temperature High") || id[3].Equals("Target Tempurature Low"))
+                        using (var ecobeeData = ecobee.getEcobeeData())
                         {
-                            foreach (var thermostat in ecobeeData.thermostatList)
+
+                            DeviceClass dv = (DeviceClass)Util.hs.GetDeviceByRef(CC.Ref);
+                            string name;
+                            string id = Util.GetDeviceKeys(dv, out name);
+
+                            int high = 0;
+                            int low = 0;
+
+                            if (name == "Target Temperature High" || name == "Target Tempurature Low")
                             {
-                                if (thermostat.identifier.Equals(id[1]))
+                                foreach (var thermostat in ecobeeData.thermostatList)
                                 {
-                                    high = thermostat.runtime.desiredCool;
-                                    low = thermostat.runtime.desiredHeat;
+                                    if (thermostat.identifier == id)
+                                    {
+                                        high = thermostat.runtime.desiredCool;
+                                        low = thermostat.runtime.desiredHeat;
+                                    }
                                 }
                             }
+                            switch (name)
+                            {
+                                case "Fan Mode":
+                                    response= ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + high + ",\"fan\": \"" + CC.Label.ToLower() + "\"}}]}");
+                                    break;
+                                case "HVAC Mode":
+                                    response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"thermostat\":{\"settings\":{ \"hvacMode\":\"" + CC.Label.ToLower() + "\"}}}");
+                                    break;
+                                case "Target Temperature Low":
+                                    Console.WriteLine("low");
+                                    response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + CC.ControlValue * 10 + ",\"coolHoldTemp\":" + high + "}}]}");
+                                    break;
+                                case "Target Temperature High":
+                                    Console.WriteLine("high");
+                                    response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + CC.ControlValue * 10 + "}}]}");
+                                    break;
+                            }
                         }
-                        switch (id[3])
-                        {
-                            case "Fan Mode":
-                                ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id[1] + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + high + ",\"fan\": \"" + CC.Label.ToLower() + "\"}}]}");
-                                break;
-                            case "HVAC Mode":
-                                ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id[1] + "\"},\"thermostat\":{\"settings\":{ \"hvacMode\":\"" + CC.Label.ToLower() + "\"}}}");
-                                break;
-                            case "Target Temperature Low":
-                                Console.WriteLine("low");
-                                ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id[1] + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + CC.ControlValue * 10 + ",\"coolHoldTemp\":" + high + "}}]}");
-                                break;
-                            case "Target Temperature High":
-                                Console.WriteLine("high");
-                                ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id[1] + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + CC.ControlValue * 10 + "}}]}");
-                                break;
-                        } 
+
                     }
-                    
+                    if (response != null && response.status != null && response.status.code == 0)
+                    {
+                        Util.hs.SetDeviceValueByRef(CC.Ref, CC.ControlValue, true);
+                    }
+                    else
+                    {
+                        if (response != null && response.status != null)
+                            Util.Log(response.status.message, Util.LogType.LOG_TYPE_ERROR);
+                        else
+                            Util.Log("Unknown error while trying to set value", Util.LogType.LOG_TYPE_ERROR);
+                    }
                 }
-                Util.hs.SetDeviceValueByRef(CC.Ref, CC.ControlValue, false);
+                catch (Exception e)
+                {
+                    Util.Log(e.ToString(), Util.LogType.LOG_TYPE_ERROR);
+                }
             }
         }
 

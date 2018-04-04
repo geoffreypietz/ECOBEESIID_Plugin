@@ -27,5 +27,5 @@ homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 %<HS TYPE=SUBCAT>ECOBEESIID Plugin
 ' -------------------------------------------------------------
-ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,0.9.6381.33431,	 63, 2, local, Zips,	EcobeeSIID-0.9.6381.33431.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,
+ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,3.0.3.0,	 63, 2, local, Zips,	EcobeeSIID-3.0.3.0.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,
 
