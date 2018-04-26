@@ -451,6 +451,7 @@ namespace HSPI_ECOBEESIID
                         dt.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Thermostat;
                         dt.Device_Type = (int)DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Root;
                         dv.set_DeviceType_Set(hs, dt); dv.set_Relationship(hs, Enums.eRelationship.Parent_Root);
+                        dv.set_Device_Type_String(hs, "Ecobee Root Thermostat");
                         dv.MISC_Set(hs, Enums.dvMISC.STATUS_ONLY);
 
                         VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
@@ -896,6 +897,7 @@ namespace HSPI_ECOBEESIID
             dv.MISC_Set(hs, Enums.dvMISC.NO_LOG);
             dv.set_DeviceType_Set(hs, DT);
             dv.set_Relationship(hs, Enums.eRelationship.Child);
+            dv.set_Device_Type_String(hs, "Ecobee Child Device");
             return dv;
         }
 

@@ -35,12 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HomeSeerAPI">
-      <HintPath>..\..\..\HomeSeer\HomeSeerAPI.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>HomeseerDlls\HomeSeerAPI.dll</HintPath>
     </Reference>
     <Reference Include="HSCF">
-      <HintPath>..\..\..\HomeSeer\HSCF.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>HomeseerDlls\HSCF.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -51,8 +49,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Scheduler">
-      <HintPath>..\..\..\HomeSeer\Scheduler.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>HomeseerDlls\Scheduler.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -91,10 +88,10 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if not exist "$(TargetDir)$(ProjectName)" mkdir" "$(TargetDir)$(ProjectName)
+    <PostBuildEvent>if not exist "$(TargetDir)bin"  mkdir "$(TargetDir)bin"
+	if not exist "$(TargetDir)\bin\$(ProjectName)" mkdir "$(TargetDir)\bin\$(ProjectName)"
 
-xcopy "$(TargetDir)\*.dll" "$(TargetDir)$(ProjectName)\" /F /Y
-
+xcopy "$(TargetDir)\*.dll" "$(TargetDir)\bin\$(ProjectName)\" /F /Y
 
 rmdir "$(TargetDir)\app.publish\" /Q /S
 rmdir "$(TargetDir)\es-MX\" /Q /S

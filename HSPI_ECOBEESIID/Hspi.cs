@@ -415,7 +415,7 @@ namespace HSPI_ECOBEESIID
                             int high = 0;
                             int low = 0;
 
-                            if (name == "Target Temperature High" || name == "Target Tempurature Low")
+                            if (name == "Target Temperature High" || name == "Target Temperature Low")
                             {
                                 foreach (var thermostat in ecobeeData.thermostatList)
                                 {
