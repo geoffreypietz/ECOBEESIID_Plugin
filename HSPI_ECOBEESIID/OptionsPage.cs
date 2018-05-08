@@ -11,12 +11,12 @@ using System.Xml.Linq;
 using System.IO;
 using System.Security.Cryptography;
 using System.Net;
-using HSPI_ECOBEESIID.Models;
+using HSPI_Ecobee_Thermostat_Plugin.Models;
 using System.Runtime.Serialization.Json;
 using Newtonsoft.Json;
 using System.Web.UI;
 
-namespace HSPI_ECOBEESIID
+namespace HSPI_Ecobee_Thermostat_Plugin
 {
     public class OptionsPage : PageBuilderAndMenu.clsPageBuilder
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HSPI_ECOBEESIID.Models
+namespace HSPI_Ecobee_Thermostat_Plugin.Models
 {
     class DeviceDataPoint
     {

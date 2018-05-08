@@ -10,10 +10,10 @@ using Scheduler;
 using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
-using HSPI_ECOBEESIID.Models;
+using HSPI_Ecobee_Thermostat_Plugin.Models;
 using Scheduler.Classes;
 
-namespace HSPI_ECOBEESIID
+namespace HSPI_Ecobee_Thermostat_Plugin
 {
     public class HSPI : IPlugInAPI
     {
@@ -186,14 +186,25 @@ namespace HSPI_ECOBEESIID
                     }
                     else
                     {
-                        Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
+                         access = ecobee.refreshToken();
+                        if (access)
+                        {
+                            Util.Find_Create_Devices(ecobee);
+                        }
+                        else
+                        {
+
+                            //first try refreshing token
+                            Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
+                        }
+                       
                     } 
                 }
             }
             catch (Exception ex)
             {
                 Util.Log(ex.ToString(), Util.LogType.LOG_TYPE_ERROR);
-                System.IO.File.WriteAllText(@"Data/hspi_ecobeesiid/debug.txt", ex.ToString());
+                System.IO.File.WriteAllText(@"Data/HSPI_Ecobee_Thermostat_Plugin/debug.txt", ex.ToString());
             }
             running = false;
         }

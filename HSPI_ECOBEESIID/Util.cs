@@ -14,12 +14,12 @@ using System.Text;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
-using HSPI_ECOBEESIID.Models;
+using HSPI_Ecobee_Thermostat_Plugin.Models;
 using static HomeSeerAPI.DeviceTypeInfo_m.DeviceTypeInfo;
 using Newtonsoft.Json;
 using System.Linq;
 
-namespace HSPI_ECOBEESIID
+namespace HSPI_Ecobee_Thermostat_Plugin
 {
 
     static class Util
@@ -33,7 +33,7 @@ namespace HSPI_ECOBEESIID
         public const int ERR_INIT = 2;
         public static HomeSeerAPI.IHSApplication hs;
         public static HomeSeerAPI.IAppCallbackAPI callback;
-        public const string IFACE_NAME = "ECOBEESIID";
+        public const string IFACE_NAME = "Ecobee Thermostat Plugin";
         //public const string IFACE_NAME = "Sample Plugin";
         // set when SupportMultipleInstances is TRUE
         public static string Instance = "";
@@ -420,7 +420,7 @@ namespace HSPI_ECOBEESIID
             catch (Exception ex)
             {
                 Log("Exception in Find_Create_Thermostats: " + ex.Message, LogType.LOG_TYPE_ERROR);
-                System.IO.File.WriteAllText(@"Data/hspi_ecobeesiid/debug.txt", ex.ToString());
+                System.IO.File.WriteAllText(@"Data/HSPI_Ecobee_Thermostat_Plugin/debug.txt", ex.ToString());
             }
         }
 

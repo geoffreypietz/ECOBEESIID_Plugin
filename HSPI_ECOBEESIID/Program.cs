@@ -11,7 +11,7 @@ using HSCF.Communication.Scs.Communication.EndPoints.Tcp;
 using HSCF.Communication.ScsServices.Client;
 using HSCF.Communication.ScsServices.Service;
 
-namespace HSPI_ECOBEESIID
+namespace HSPI_Ecobee_Thermostat_Plugin
 {
     class Program
     {

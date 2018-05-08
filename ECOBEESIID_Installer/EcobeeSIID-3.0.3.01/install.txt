@@ -1,5 +1,5 @@
 HSPI_ECOBEESIID.exe,.,0
 HSPI_ECOBEESIID.exe.config,.,0
 HSPI_ECOBEESIID.zip,[UNZIPOVER],./bin/
-debug.txt,.\Data\hspi_ecobeesiid,16
+debug.txt,.\Data\HSPI_Ecobee_Thermostat_Plug-in,16
 ECOBEESIID.ini,.\Config\,16

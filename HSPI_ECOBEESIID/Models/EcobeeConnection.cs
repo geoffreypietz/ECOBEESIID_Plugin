@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Diagnostics;
 
-namespace HSPI_ECOBEESIID.Models
+namespace HSPI_Ecobee_Thermostat_Plugin.Models
 {
     class EcobeeConnection : IDisposable
     {
@@ -70,6 +70,31 @@ namespace HSPI_ECOBEESIID.Models
 
             return initial_response;
         }
+
+
+        public bool refreshToken()
+        {
+         
+               string urlParams = "token?grant_type=refresh_token&refresh_tokenREFRESH_TOKEN&client_id=" + apiKey;
+            
+            IRestResponse response = sendHTTPRequest(Method.POST, urlParams, null);
+            using (Login login = JsonConvert.DeserializeObject<Login>(response.Content))
+            {
+                if (login.access_token != null)
+                {
+                    access_Token = login.access_token;
+                    refresh_Token = login.refresh_token;
+                    saveLogin();
+                    return true;
+                }
+            }
+            return false;
+
+
+        }
+
+
+
         public bool retrieveAccessToken(bool pin)
         {
             string urlParams;

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("HSPI_ECOBEESIID")]
+[assembly: AssemblyTitle("HSPI_Ecobee_Thermostat_Plugin")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Axios Software")]
-[assembly: AssemblyProduct("HSPI_ECOBEESIID")]
+[assembly: AssemblyProduct("HSPI_Ecobee_Thermostat_Plugin")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.0.3.01")]
+[assembly: AssemblyVersion("3.0.3.02")]
 //[assembly: AssemblyFileVersion("1.0.0.0")]
