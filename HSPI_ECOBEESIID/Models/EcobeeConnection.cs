@@ -74,10 +74,28 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
 
         public bool refreshToken()
         {
-         
-               string urlParams = "token?grant_type=refresh_token&refresh_tokenREFRESH_TOKEN&client_id=" + apiKey;
+            string urlParams;
+            try
+            {
+                 urlParams = "token?grant_type=refresh_token&refresh_token=" + refresh_Token + "&client_id=" + apiKey;
+            }
+            catch
+            {
+                string json = Util.hs.GetINISetting("ECOBEE", "login", "", Util.IFACE_NAME + ".ini");
+                using (Login Login = getLoginInfo(json))
+                {
+                    refresh_Token = Login?.refresh_token;
+                    access_Token = Login?.access_token;
+                    ecobeePin = Login?.ecobeePin;
+                    code = Login?.code;
+                }
+                urlParams = "token?grant_type=refresh_token&refresh_token=" + refresh_Token + "&client_id=" + apiKey;
+
+            }
             
             IRestResponse response = sendHTTPRequest(Method.POST, urlParams, null);
+
+            LogDebug(urlParams, response);
             using (Login login = JsonConvert.DeserializeObject<Login>(response.Content))
             {
                 if (login.access_token != null)
@@ -98,26 +116,43 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
         public bool retrieveAccessToken(bool pin)
         {
             string urlParams;
-            if(pin)
+            try
             {
-                urlParams = "token?grant_type=ecobeePin&code=" + code + "&client_id=" + apiKey;
-                //Console.WriteLine(urlParams);
-            }
-            else
-            {
-                urlParams = "token?grant_type=refresh_token&code=" + refresh_Token + "&client_id=" + apiKey;
-            }
-            IRestResponse response = sendHTTPRequest(Method.POST, urlParams, null);
-            using (Login login = JsonConvert.DeserializeObject<Login>(response.Content))
-            {
-                if (login.access_token != null)
+                if (pin)
                 {
-                    access_Token = login.access_token;
-                    refresh_Token = login.refresh_token;
-                    saveLogin();
-                    return true;
-                } 
+                    urlParams = "token?grant_type=ecobeePin&code=" + code + "&client_id=" + apiKey;
+                    //Console.WriteLine(urlParams);
+                }
+                else
+                {
+                    if (refresh_Token == null)
+                    {
+                        string json = Util.hs.GetINISetting("ECOBEE", "login", "", Util.IFACE_NAME + ".ini");
+                        using (Login Login = getLoginInfo(json))
+                        {
+                            refresh_Token = Login?.refresh_token;
+                            access_Token = Login?.access_token;
+                            ecobeePin = Login?.ecobeePin;
+                            code = Login?.code;
+                        }
+                    }
+                        urlParams = "token?grant_type=refresh_token&code=" + refresh_Token + "&client_id=" + apiKey;
+                    
+                }
+               
+                IRestResponse response = sendHTTPRequest(Method.POST, urlParams, null);
+                using (Login login = JsonConvert.DeserializeObject<Login>(response.Content))
+                {
+                    if (login.access_token != null)
+                    {
+                        access_Token = login.access_token;
+                        refresh_Token = login.refresh_token;
+                        saveLogin();
+                        return true;
+                    }
+                }
             }
+            catch { }
             return false;
         }
         public string retrievePin()
@@ -140,6 +175,16 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
             return JsonConvert.DeserializeObject<EcobeeData>(response.Content);
         }
 
+        public void LogDebug(String request, IRestResponse initial_response)
+        {
+            Util.Log(request, Util.LogType.LOG_TYPE_DEBUG);
+            Util.Log(initial_response.Content, Util.LogType.LOG_TYPE_DEBUG);
+        }
+        public void LogDebug(RestRequest request, IRestResponse initial_response) {
+            LogDebug(Util.RequestToString(request), initial_response);
+           
+        }
+
         public EcobeeResponse setApiJson(string json)
         {
             var client = new RestClient("https://api.ecobee.com/1/thermostat?format=json"); 
@@ -148,7 +193,14 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
             request.AddHeader("authorization", "Bearer " + access_Token);
             request.AddHeader("content-type", "application/json");
 
+            
+
             IRestResponse initial_response = client.Execute(request);
+            LogDebug(request, initial_response);
+
+
+
+
             return JsonConvert.DeserializeObject<EcobeeResponse>(initial_response.Content);
         }
 

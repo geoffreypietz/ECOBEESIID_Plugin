@@ -463,8 +463,18 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                     }
                     else
                     {
+
                         if (response != null && response.status != null)
-                            Util.Log(response.status.message, Util.LogType.LOG_TYPE_ERROR);
+                        {
+                            if (response.status.code == 14)
+                            {
+                                EcobeeControls(colSend);
+                            }
+
+
+                                Util.Log(response.status.message, Util.LogType.LOG_TYPE_ERROR);
+
+                        }
                         else
                             Util.Log("Unknown error while trying to set value", Util.LogType.LOG_TYPE_ERROR);
                     }

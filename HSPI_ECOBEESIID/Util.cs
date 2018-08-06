@@ -18,6 +18,7 @@ using HSPI_Ecobee_Thermostat_Plugin.Models;
 using static HomeSeerAPI.DeviceTypeInfo_m.DeviceTypeInfo;
 using Newtonsoft.Json;
 using System.Linq;
+using RestSharp;
 
 namespace HSPI_Ecobee_Thermostat_Plugin
 {
@@ -61,7 +62,8 @@ namespace HSPI_Ecobee_Thermostat_Plugin
         {
             LOG_TYPE_INFO = 0,
             LOG_TYPE_ERROR = 1,
-            LOG_TYPE_WARNING = 2
+            LOG_TYPE_WARNING = 2,
+                LOG_TYPE_DEBUG = 3
         }
 
         public static void Log(string msg, LogType logType)
@@ -84,6 +86,9 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                         hs.WriteLog(Util.IFACE_NAME + " Warning", msg);
                         break;
                     case LogType.LOG_TYPE_INFO:
+                        hs.WriteLog(Util.IFACE_NAME, msg);
+                        break;
+                    case LogType.LOG_TYPE_DEBUG:
                         hs.WriteLog(Util.IFACE_NAME, msg);
                         break;
                 }
@@ -872,6 +877,18 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             pData.AddNamed("name", name);
             dev.set_PlugExtraData_Set(hs, pData);
         }
+
+        public static string RequestToString(RestRequest request)
+        {
+
+            var sb = new StringBuilder();
+            foreach (var param in request.Parameters)
+            {
+                sb.AppendFormat("{0}: {1}\r\n", param.Name, param.Value);
+            }
+            return sb.ToString();
+        }
+     
 
         static internal DeviceClass GenericHomeSeerDevice(DeviceClass dv, string dvName, string dvName_long, string device_id)
         {
