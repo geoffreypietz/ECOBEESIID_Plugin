@@ -177,8 +177,9 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
 
         public void LogDebug(String request, IRestResponse initial_response)
         {
+            /*
             Util.Log(request, Util.LogType.LOG_TYPE_DEBUG);
-            Util.Log(initial_response.Content, Util.LogType.LOG_TYPE_DEBUG);
+            Util.Log(initial_response.Content, Util.LogType.LOG_TYPE_DEBUG);*/
         }
         public void LogDebug(RestRequest request, IRestResponse initial_response) {
             LogDebug(Util.RequestToString(request), initial_response);
