@@ -1,0 +1,5 @@
+HSPI_Ecobee_Thermostat_Plugin.exe,.,0
+HSPI_Ecobee_Thermostat_Plugin.exe.config,.,0
+HSPI_Ecobee_Thermostat_Plugin.zip,[UNZIPOVER],./bin/
+debug.txt,.\Data\HSPI_Ecobee_Thermostat_Plugin,16
+Ecobee Thermostat Plugin.ini,.\Config\,16

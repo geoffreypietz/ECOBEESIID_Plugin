@@ -381,10 +381,25 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             {
                 deviceList = Get_Device_List(deviceList);
 
-                Find_Create_Thermostats(ecobeeData, deviceList, ecobee); 
+                Find_Create_Thermostats(ecobeeData, deviceList, ecobee);
+             //   Delete_Leftover_Devices(deviceList);
             }
         }
+        /// <summary>
+        /// as we match homeseer devices to ecobee thermostats, we remove the entry from the device list
+        /// anything left over should be deleted from homeseer to eliminate the duplicate device bug
+        /// </summary>
+        /// <param name="deviceList"></param>
+        static internal void Delete_Leftover_Devices(List<DeviceDataPoint> deviceList)
+        {
+            foreach (var ddPoint in deviceList)
+            {
+                hs.DeleteDevice(ddPoint.dvRef);
+      
+            }
 
+
+        }
         static internal void Find_Create_Thermostats(EcobeeData ecobeeData, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
         {
             bool create = false;
@@ -439,14 +454,19 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                 id = GetDeviceKeys(ddPoint.device, out name);
                 if (id == thermostat.identifier && name == tString)
                 {
+                 //   deviceList.RemoveAt(deviceList.IndexOf(ddPoint));
                     Update_ThermostatDevice(thermostat, ddPoint, ecobee);
                     return false;
                 }
             }
 
-            DeviceClass dv = new DeviceClass();
-            dv = GenericHomeSeerDevice(dv, tString, thermostat.name, thermostat.identifier);
+            //Big issue here!
+        //    DeviceClass dv = new DeviceClass();
+          var  dv = GenericHomeSeerDevice(tString, thermostat.name, thermostat.identifier);
             var dvRef = dv.get_Ref(hs);
+
+
+
             id = GetDeviceKeys(dv, out name);
             switch (name)
             {
@@ -794,6 +814,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
 
                 if(id == (thermostat.identifier + remote.code) && name == (sensorType + tString))
                 {
+                //    deviceList.RemoveAt(deviceList.IndexOf(ddPoint));
                     Update_RemoteDevice(thermostat, capability, ddPoint, ecobee);
                     return false;
                 }
@@ -801,8 +822,8 @@ namespace HSPI_Ecobee_Thermostat_Plugin
 
             
 
-            DeviceClass dv = new DeviceClass();
-            dv = GenericHomeSeerDevice(dv, sensorType + tString, remote.name, thermostat.identifier + remote.code);
+           
+            DeviceClass dv = GenericHomeSeerDevice( sensorType + tString, remote.name, thermostat.identifier + remote.code);
             var dvRef = dv.get_Ref(hs);
             id = GetDeviceKeys(dv, out name);
 
@@ -890,7 +911,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
         }
      
 
-        static internal DeviceClass GenericHomeSeerDevice(DeviceClass dv, string dvName, string dvName_long, string device_id)
+        static internal DeviceClass GenericHomeSeerDevice( string dvName, string dvName_long, string device_id)
         {
             int dvRef;
             Log("Creating Device: " + dvName_long + " " + dvName, LogType.LOG_TYPE_INFO);
@@ -902,7 +923,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             }
           
             dvRef = hs.NewDeviceRef(dvName_long + " " + dvName);
-            dv = (DeviceClass)hs.GetDeviceByRef(dvRef);
+           var dv = (DeviceClass)hs.GetDeviceByRef(dvRef);
             dv.set_Address(hs, "");
             SetDeviceKeys(dv, device_id, dvName);
             //dv.set_Code(hs, device_id + "-" + dvName_long + "-" + dvName);
