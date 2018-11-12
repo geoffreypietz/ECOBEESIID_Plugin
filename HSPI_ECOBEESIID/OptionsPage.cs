@@ -65,6 +65,11 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                         pageCommands.Add("popmessage", "Failed to reset Access Token");
                     }
                 }
+                if (id == "devices_button")
+                {
+                    Util.Create_Devices(ecobee);
+
+                }
 
             }
             return base.postBackProc(page, data, user, userRights);
@@ -157,12 +162,19 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                 pluginSB.Append("<tr><td class='tablecell'>After validating the pin code, hit the Reset/Retrieve Access-Token button to reset your access token</td>");
                 pluginSB.Append("<td class='tablecell'>");
                 pluginSB = BuildLinkButton(pluginSB, "access_button", "Reset/Retrieve Access-Token", "");
+      
+                pluginSB.Append("</td></tr>");
+
+                pluginSB.Append("<tr><td class='tablecell'>Finally, hit the Create Homeseer devices button to add the Ecobee thermostat devices to Homeseer</td>");
+                pluginSB.Append("<td class='tablecell'>");
+                pluginSB = BuildLinkButton(pluginSB, "devices_button", "Create Homeseer devices", "");
+
                 pluginSB.Append("</td></tr>");
 
                 pluginSB.Append("</td></tr>");
 
                 pluginSB.Append("</table><br>");
-
+               
                 pluginSB.Append(PageBuilderAndMenu.clsPageBuilder.FormEnd());
 
             }

@@ -59,6 +59,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
         public IRestResponse sendHTTPRequest(Method method, string urlParams, string json)
         {
             var client = new RestClient("https://api.ecobee.com/" + urlParams);
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
             client.FollowRedirects = false;
             var request = getRequestGetOrPut(method, null);
             if (urlParams.Contains("thermostat"))
@@ -158,6 +159,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
         public string retrievePin()
         {
             string urlParams = "authorize?response_type=ecobeePin&client_id=" + apiKey + "&scope=smartWrite";
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
             IRestResponse response = sendHTTPRequest(Method.GET, urlParams, null);
             EcobeePin pin = JsonConvert.DeserializeObject<EcobeePin>(response.Content);
             if (pin.ecobeePin != null)
@@ -172,9 +174,21 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
         {
             string urlParams = "1/thermostat?json={\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\",\"includeEvents\":\"true\",\"includeSettings\":\"true\",\"includeRuntime\":\"true\",\"includeSensors\":\"true\"}}";
             IRestResponse response = sendHTTPRequest(Method.GET, urlParams, null);
+
+
+
             return JsonConvert.DeserializeObject<EcobeeData>(response.Content);
         }
 
+        public string ecobeeMessage()
+        {
+            string urlParams = "1/thermostat?json={\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\",\"includeEvents\":\"true\",\"includeSettings\":\"true\",\"includeRuntime\":\"true\",\"includeSensors\":\"true\"}}";
+            IRestResponse response = sendHTTPRequest(Method.GET, urlParams, null);
+
+
+            return response.StatusDescription;
+
+        }
         public void LogDebug(String request, IRestResponse initial_response)
         {
             /*
@@ -194,8 +208,8 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
             request.AddHeader("authorization", "Bearer " + access_Token);
             request.AddHeader("content-type", "application/json");
 
-            
 
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
             IRestResponse initial_response = client.Execute(request);
             LogDebug(request, initial_response);
 

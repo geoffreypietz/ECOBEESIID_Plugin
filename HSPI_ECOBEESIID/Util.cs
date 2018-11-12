@@ -373,15 +373,47 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             }
         }
 
+
+
+        static internal void Create_Devices(EcobeeConnection ecobee)
+        {
+            List<DeviceDataPoint> deviceList = new List<DeviceDataPoint>();
+
+            using (var ecobeeData = ecobee.getEcobeeData())
+            {
+                if (ecobeeData == null)
+                {
+
+                    Log("Exception in Find_Create_Thermostats: " + ecobee.ecobeeMessage(), LogType.LOG_TYPE_ERROR);
+                }
+                else
+                {
+                    deviceList = Get_Device_List(deviceList);
+
+                    Find_Create_Thermostats(ecobeeData, deviceList, ecobee);
+                    Update_Thermostats(ecobeeData, deviceList, ecobee);
+                }
+                //   Delete_Leftover_Devices(deviceList);
+            }
+
+        }
         static internal void Find_Create_Devices(EcobeeConnection ecobee)
         {
             List<DeviceDataPoint> deviceList = new List<DeviceDataPoint>();
 
             using (var ecobeeData = ecobee.getEcobeeData())
             {
-                deviceList = Get_Device_List(deviceList);
-
-                Find_Create_Thermostats(ecobeeData, deviceList, ecobee);
+                if (ecobeeData == null)
+                {
+                    
+                    Log("Exception in Find_Create_Thermostats: " + ecobee.ecobeeMessage(), LogType.LOG_TYPE_ERROR);
+                }
+                else
+                {
+                    deviceList = Get_Device_List(deviceList);
+                    Update_Thermostats(ecobeeData, deviceList, ecobee);
+          
+                }
              //   Delete_Leftover_Devices(deviceList);
             }
         }
@@ -400,6 +432,59 @@ namespace HSPI_Ecobee_Thermostat_Plugin
 
 
         }
+
+
+        static internal void Update_Thermostats(EcobeeData ecobeeData, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
+        {
+          
+            List<string> tStrings = getThermostatStrings();
+            bool missingDevice = false;
+            try
+            {
+                foreach (var thermostat in ecobeeData.thermostatList)
+                {
+                    foreach (var tString in tStrings)
+                    {
+                        missingDevice = missingDevice || Find_Thermostat_Devices(tString, thermostat, deviceList, ecobee);
+
+                    }
+                    foreach (var remote in thermostat.remoteSensors)
+                    {
+                        if (remote.inUse && remote.name != thermostat.name)
+                        {
+                            foreach (var capability in remote.capabilityList)
+                            {
+                                if (capability.type.Equals("temperature") || capability.type.Equals("occupancy"))
+                                {
+                                    missingDevice = missingDevice || Find_Remote_Devices(" Sensor", thermostat, remote, capability, deviceList, ecobee);
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log("Exception in Find_Create_Thermostats: " + ex.Message, LogType.LOG_TYPE_ERROR);
+                try
+                {
+                    System.IO.File.WriteAllText(@"Data/HSPI_Ecobee_Thermostat_Plugin/debug.txt", ex.ToString());
+                }
+                catch { }
+            }
+            finally
+            {
+                if (missingDevice)
+                {
+                    Log("ECOBEE Warning :Ecobee data returned for which there were no associated Homeseer device. Please click on the 'Create Homeseer devices' button on the ECOBEE plugin management page to fix.", LogType.LOG_TYPE_WARNING);
+
+                }
+
+            }
+        }
+
         static internal void Find_Create_Thermostats(EcobeeData ecobeeData, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
         {
             bool create = false;
@@ -440,14 +525,39 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             catch (Exception ex)
             {
                 Log("Exception in Find_Create_Thermostats: " + ex.Message, LogType.LOG_TYPE_ERROR);
-                System.IO.File.WriteAllText(@"Data/HSPI_Ecobee_Thermostat_Plugin/debug.txt", ex.ToString());
+                try
+                {
+                    System.IO.File.WriteAllText(@"Data/HSPI_Ecobee_Thermostat_Plugin/debug.txt", ex.ToString());
+                }
+                catch { }
             }
         }
 
-        static internal bool Thermostat_Devices(string tString, Thermostat thermostat, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
+
+        static internal bool Find_Thermostat_Devices(string tString, Thermostat thermostat, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
         {
             string name;
             string id;
+
+            foreach (var ddPoint in deviceList)
+            {
+                id = GetDeviceKeys(ddPoint.device, out name);
+                if (id == thermostat.identifier && name == tString)
+                {
+                    //   deviceList.RemoveAt(deviceList.IndexOf(ddPoint));
+                    Update_ThermostatDevice(thermostat, ddPoint, ecobee);
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+            static internal bool Thermostat_Devices(string tString, Thermostat thermostat, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
+        {
+            string name;
+            string id;
+            
 
             foreach (var ddPoint in deviceList)
             {
@@ -793,7 +903,37 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             return true;
         }
 
-        static internal bool Remote_Devices(string tString, Thermostat thermostat, RemoteSensors remote, SensorCapabilities capability, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
+        
+              static internal bool Find_Remote_Devices(string tString, Thermostat thermostat, RemoteSensors remote, SensorCapabilities capability, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
+        {
+            var sensorType = "";
+            if (capability.type.Equals("temperature"))
+            {
+                sensorType = "Temperature";
+            }
+            if (capability.type.Equals("occupancy"))
+            {
+                sensorType = "Occupancy";
+            }
+
+            string name;
+            string id;
+
+            foreach (var ddPoint in deviceList)
+            {
+                id = GetDeviceKeys(ddPoint.device, out name);
+
+                if (id == (thermostat.identifier + remote.code) && name == (sensorType + tString))
+                {
+                    //    deviceList.RemoveAt(deviceList.IndexOf(ddPoint));
+                    Update_RemoteDevice(thermostat, capability, ddPoint, ecobee);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+            static internal bool Remote_Devices(string tString, Thermostat thermostat, RemoteSensors remote, SensorCapabilities capability, List<DeviceDataPoint> deviceList, EcobeeConnection ecobee)
         {
             var sensorType = "";
             if (capability.type.Equals("temperature"))
