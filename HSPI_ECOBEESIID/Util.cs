@@ -677,15 +677,15 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                         dt.Device_SubType = 0;
                         dv.set_DeviceType_Set(hs, dt);
 
-                        VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
+                      VSVGPairs.VSPair SPair = default(VSVGPairs.VSPair);
                         SPair = new VSVGPairs.VSPair(ePairStatusControl.Both);
-                        SPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
-                        SPair.Render = Enums.CAPIControlType.Button;
-                        SPair.Value = 0;
-                        SPair.Status = "Off";
-                        SPair.Render_Location.Row = 1;
-                        SPair.Render_Location.Column = 1;
-                        hs.DeviceVSP_AddPair(dvRef, SPair);
+                      SPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
+                      SPair.Render = Enums.CAPIControlType.Button;
+                      SPair.Value = 0;
+                      SPair.Status = "Off";
+                      SPair.Render_Location.Row = 1;
+                      SPair.Render_Location.Column = 1;
+                //      hs.DeviceVSP_AddPair(dvRef, SPair);
 
                         VSVGPairs.VGPair GPair = new VSVGPairs.VGPair();
                         GPair.PairType = VSVGPairs.VSVGPairType.SingleValue;

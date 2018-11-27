@@ -195,7 +195,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                         {
 
                             //first try refreshing token
-                            Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
+                       //     Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
                         }
                        
                     } 
@@ -434,7 +434,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                                 int high = 0;
                                 int low = 0;
 
-                                if (name == "Target Temperature High" || name == "Target Temperature Low")
+                                if (name == "Target Temperature High" || name == "Target Temperature Low" || name == "Fan Mode")
                                 {
                                     foreach (var thermostat in ecobeeData.thermostatList)
                                     {
@@ -448,7 +448,19 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                                 switch (name)
                                 {
                                     case "Fan Mode":
-                                        response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + high + ",\"fan\": \"" + CC.Label.ToLower() + "\"}}]}");
+                                        if (CC.Label.ToLower() == "off")  //fan settings can be "auto" or "on", can't set to "off"
+                                                                          //The fan mode during the event. Values: auto, on Default: based on current climate and hvac mode
+                                                                          //https://www.ecobee.com/home/developer/api/documentation/v1/objects/Event.shtml
+                                        {
+                                            response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + high + ",\"fan\": \"auto\"}}]}");
+
+                                        }
+                                        else
+                                        {
+                                            response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"functions\": [{\"type\":\"setHold\",\"params\":{\"holdType\":\"nextTransition\",\"heatHoldTemp\":" + low + ",\"coolHoldTemp\":" + high + ",\"fan\": \"" + CC.Label.ToLower() + "\"}}]}");
+
+
+                                       }
                                         break;
                                     case "HVAC Mode":
                                         response = ecobee.setApiJson("{\"selection\":{\"selectionType\":\"thermostats\",\"selectionMatch\":\"" + id + "\"},\"thermostat\":{\"settings\":{ \"hvacMode\":\"" + CC.Label.ToLower() + "\"}}}");
@@ -497,7 +509,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
                 {
 
                     //first try refreshing token
-                    Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
+                  //  Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
                 }
             }
         }

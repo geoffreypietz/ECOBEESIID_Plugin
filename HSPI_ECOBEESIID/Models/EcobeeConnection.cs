@@ -107,6 +107,16 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
                     return true;
                 }
             }
+
+            if (200 <= ((int)response.StatusCode) && ((int)response.StatusCode) < 400) {
+                Util.Log(response.StatusDescription, Util.LogType.LOG_TYPE_ERROR);
+
+            }
+            else {
+                Util.Log(response.StatusDescription+"  "+response.ErrorMessage, Util.LogType.LOG_TYPE_ERROR);
+            } 
+          
+            Util.Log("Invalid Refresh Token-Try resetting the token on the Options Page", Util.LogType.LOG_TYPE_ERROR);
             return false;
 
 
