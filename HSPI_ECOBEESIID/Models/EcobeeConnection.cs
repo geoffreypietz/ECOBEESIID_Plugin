@@ -102,7 +102,11 @@ namespace HSPI_Ecobee_Thermostat_Plugin.Models
                 if (login.access_token != null)
                 {
                     access_Token = login.access_token;
-                    refresh_Token = login.refresh_token;
+                    if (login.refresh_token != null)
+                    {
+                        refresh_Token = login.refresh_token;
+                    }
+                    
                     saveLogin();
                     return true;
                 }
