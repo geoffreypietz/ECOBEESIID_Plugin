@@ -350,6 +350,7 @@ namespace HSPI_Ecobee_Thermostat_Plugin
             {
                 if (capability.value != "unknown")
                 {
+                    hs.SetDeviceString(ddPoint.dvRef, string.Empty , true);
                     var temp = Int16.Parse(capability.value) / 10;
                     hs.SetDeviceValueByRef(ddPoint.dvRef, temp, true); 
                 }
